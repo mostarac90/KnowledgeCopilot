@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: knowledgecopilot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: knowledgecopilot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdevpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

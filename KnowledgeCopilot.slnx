@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <File Path="docker-compose.yml" />
+    <Project Path="src/KnowledgeCopilot.Api/KnowledgeCopilot.Api.csproj" />
+    <Project Path="src/KnowledgeCopilot.Core/KnowledgeCopilot.Core.csproj" />
+    <Project Path="src/KnowledgeCopilot.Infrastructure/KnowledgeCopilot.Infrastructure.csproj" />
+  </Folder>
+</Solution>
