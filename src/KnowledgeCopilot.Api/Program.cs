@@ -1,4 +1,6 @@
 using Npgsql;
+using KnowledgeCopilot.Core.Documents;
+using KnowledgeCopilot.Infrastructure.Documents;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,11 @@ var connectionString = builder.Configuration
 
 builder.Services.AddSingleton(
     NpgsqlDataSource.Create(connectionString));
+
+builder.Services.AddSingleton<
+    IDocumentTextExtractor,
+    PdfTextExtractor>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
