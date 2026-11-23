@@ -1,4 +1,5 @@
-﻿using KnowledgeCopilot.Core.Documents;
+﻿using KnowledgeCopilot.Core.Document;
+using KnowledgeCopilot.Core.Documents;
 using Npgsql;
 using Pgvector;
 
@@ -6,6 +7,71 @@ namespace KnowledgeCopilot.Infrastructure.Documents;
 
 public sealed class DocumentChunkRepository(NpgsqlDataSource dataSource)
 {
+
+    public async Task SaveAsync(
+    Guid documentId,
+    IReadOnlyList<(DocumentChunk Chunk, float[] Embedding)> items,
+    CancellationToken cancellationToken = default)
+    {
+        await using var connection =
+            await dataSource.OpenConnectionAsync(cancellationToken);
+
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        // Remove previously indexed chunks.
+        await using (var delete = new NpgsqlCommand(
+            "DELETE FROM document_chunks WHERE document_id = @documentId",
+            connection,
+            transaction))
+        {
+            delete.Parameters.AddWithValue("documentId", documentId);
+
+            await delete.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        const string sql = """
+        INSERT INTO document_chunks
+            (id, document_id, page_number,
+             chunk_index, content, embedding, embedding_model)
+        VALUES
+            (@id, @documentId, @pageNumber,
+             @chunkIndex, @content, @embedding, @model)
+        """;
+
+        foreach (var item in items)
+        {
+            await using var command =
+                new NpgsqlCommand(sql, connection, transaction);
+
+            command.Parameters.AddWithValue(
+                "id", Guid.NewGuid());
+
+            command.Parameters.AddWithValue(
+                "documentId", documentId);
+
+            command.Parameters.AddWithValue(
+                "pageNumber", item.Chunk.PageNumber);
+
+            command.Parameters.AddWithValue(
+                "chunkIndex", item.Chunk.ChunkIndex);
+
+            command.Parameters.AddWithValue(
+                "content", item.Chunk.Content);
+
+            command.Parameters.AddWithValue(
+                "embedding", new Vector(item.Embedding));
+
+            command.Parameters.AddWithValue(
+                "model", "text-embedding-3-small");
+
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+
     public async Task<IReadOnlyList<DocumentSearchResult>> SearchAsync(
         float[] queryEmbedding,
         int topK = 5,

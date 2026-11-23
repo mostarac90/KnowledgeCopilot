@@ -19,7 +19,33 @@ public static class DocumentEndpoints
         group.MapGet("/", GetAllDocuments);
         group.MapGet("/{id:guid}", GetDocumentById);
 
+        group.MapPost("/{id:guid}/index", IndexDocument);
+
         return app;
+    }
+
+    private static async Task<IResult> IndexDocument(
+        Guid id,
+        DocumentIndexingService indexingService,
+        CancellationToken cancellationToken)
+    {
+        var chunkCount = await indexingService.IndexAsync(
+            id, cancellationToken);
+
+        if (chunkCount is null)
+        {
+            return Results.NotFound(new
+            {
+                Error = "Document not found."
+            });
+        }
+
+        return Results.Ok(new
+        {
+            DocumentId = id,
+            Status = "Indexed",
+            ChunkCount = chunkCount
+        });
     }
 
     private static async Task<IResult> UploadDocument(

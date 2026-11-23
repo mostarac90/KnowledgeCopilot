@@ -13,6 +13,7 @@ public static class DocumentServiceExtensions
 
         services.AddScoped<DocumentRepository>();
         services.AddScoped<DocumentChunkRepository>();
+        services.AddScoped<DocumentIndexingService>();
 
         services.AddScoped<
             ISemanticSearchService,
