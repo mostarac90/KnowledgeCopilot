@@ -36,6 +36,12 @@ builder.Services.AddSingleton<IEmbeddingService>(sp =>
     return new OpenAIEmbeddingService(apiKey);
 });
 
+builder.Services.AddScoped<DocumentChunkRepository>();
+
+builder.Services.AddScoped<
+    ISemanticSearchService,
+    SemanticSearchService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
