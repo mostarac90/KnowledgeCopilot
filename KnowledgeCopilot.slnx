@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/database/">
     <File Path="001_create_documents.sql" />
+    <File Path="002_create_chunks.sql" />
   </Folder>
   <Folder Name="/src/">
     <File Path="docker-compose.yml" />

@@ -1,23 +1,40 @@
-using Npgsql;
 using KnowledgeCopilot.Core.Documents;
 using KnowledgeCopilot.Infrastructure.Documents;
+using KnowledgeCopilot.Infrastructure.Embeddings;
+using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using Pgvector;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 var connectionString = builder.Configuration
     .GetConnectionString("Postgres")
     ?? throw new InvalidOperationException(
         "Postgres connection string is missing.");
 
-builder.Services.AddSingleton(
-    NpgsqlDataSource.Create(connectionString));
+var dataSourceBuilder =
+    new NpgsqlDataSourceBuilder(connectionString);
 
-builder.Services.AddSingleton<
-    IDocumentTextExtractor,
-    PdfTextExtractor>();
+dataSourceBuilder.UseVector();
+
+builder.Services.AddSingleton(
+    dataSourceBuilder.Build());
 
 builder.Services.AddScoped<DocumentRepository>();
+
+builder.Services.AddSingleton<TextChunker>();
+
+builder.Services.AddSingleton<IEmbeddingService>(sp =>
+{
+    var configuration =
+        sp.GetRequiredService<IConfiguration>();
+
+    var apiKey = configuration["OPENAI_API_KEY"]
+        ?? throw new InvalidOperationException(
+            "OpenAI API key is missing.");
+
+    return new OpenAIEmbeddingService(apiKey);
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -81,7 +98,7 @@ app.MapGet("/api/health/database",
 app.MapPost("/api/documents",
      async (
         IFormFile file,
-        IDocumentTextExtractor extractor,
+        [FromServices] IDocumentTextExtractor extractor,
         DocumentRepository repository,
         CancellationToken cancellationToken) =>
      {
