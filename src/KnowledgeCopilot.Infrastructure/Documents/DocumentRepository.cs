@@ -7,44 +7,68 @@ namespace KnowledgeCopilot.Infrastructure.Documents
     public sealed class DocumentRepository(
       NpgsqlDataSource dataSource)
     {
-
-        public async Task<Guid> SaveAsync(Stream documentStream, CancellationToken cancellationToken = default)
+        public async Task<Guid> SaveAsync(
+        string fileName,
+        byte[] pdfBytes,
+        ExtractedDocument document,
+        CancellationToken cancellationToken = default)
         {
             var documentId = Guid.NewGuid();
-            var uploadedAt = DateTime.UtcNow;
 
-            using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
-            using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            await using var connection =
+                await dataSource.OpenConnectionAsync(cancellationToken);
 
-            // Extract text from the PDF document
-            var textExtractor = new PdfTextExtractor();
-            var extractedDocument = textExtractor.Extract(documentStream);
+            await using var transaction =
+                await connection.BeginTransactionAsync(cancellationToken);
 
-
-            // Insert the document metadata into the documents table
-            var insertDocumentCommand = connection.CreateCommand();
-            insertDocumentCommand.CommandText = @"
-                INSERT INTO documents (document_id, uploaded_at)
-                VALUES (@document_id, @uploaded_at)";
-            insertDocumentCommand.Parameters.AddWithValue("document_id", documentId);
-            insertDocumentCommand.Parameters.AddWithValue("uploaded_at", uploadedAt);
-            await insertDocumentCommand.ExecuteNonQueryAsync(cancellationToken);
-
-            // Insert each page into the document_pages table
-            foreach (var page in extractedDocument.Pages)
+            // 1. Save document metadata and original PDF
+            await using (var command = new NpgsqlCommand(
+                """
+            INSERT INTO documents
+                (id, file_name, content_type,
+                 size_bytes, original_pdf, page_count)
+            VALUES
+                (@id, @fileName, @contentType,
+                 @sizeBytes, @pdfBytes, @pageCount)
+            """, connection, transaction))
             {
-                var insertPageCommand = connection.CreateCommand();
-                insertPageCommand.CommandText = @"
-                    INSERT INTO document_pages (document_id, page_number, text)
-                    VALUES (@document_id, @page_number, @text)";
-                insertPageCommand.Parameters.AddWithValue("document_id", documentId);
-                insertPageCommand.Parameters.AddWithValue("page_number", page.PageNumber);
-                insertPageCommand.Parameters.AddWithValue("text", page.Text);
+                command.Parameters.AddWithValue("id", documentId);
+                command.Parameters.AddWithValue("fileName", fileName);
+                command.Parameters.AddWithValue(
+                    "contentType", "application/pdf");
+                command.Parameters.AddWithValue(
+                    "sizeBytes", (long)pdfBytes.Length);
+                command.Parameters.AddWithValue("pdfBytes", pdfBytes);
+                command.Parameters.AddWithValue(
+                    "pageCount", document.Pages.Count);
 
-                await insertPageCommand.ExecuteNonQueryAsync(cancellationToken);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+            // 2. Save text for each page
+            foreach (var page in document.Pages)
+            {
+                await using var command = new NpgsqlCommand(
+                    """
+                INSERT INTO document_pages
+                    (document_id, page_number, extracted_text)
+                VALUES
+                    (@documentId, @pageNumber, @text)
+                """, connection, transaction);
+
+                command.Parameters.AddWithValue(
+                    "documentId", documentId);
+
+                command.Parameters.AddWithValue(
+                    "pageNumber", page.PageNumber);
+
+                command.Parameters.AddWithValue(
+                    "text", page.Text);
+
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);
+
             return documentId;
         }
 

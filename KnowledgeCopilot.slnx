@@ -1,11 +1,11 @@
 <Solution>
+  <Folder Name="/database/">
+    <File Path="001_create_documents.sql" />
+  </Folder>
   <Folder Name="/src/">
     <File Path="docker-compose.yml" />
     <Project Path="src/KnowledgeCopilot.Api/KnowledgeCopilot.Api.csproj" />
     <Project Path="src/KnowledgeCopilot.Core/KnowledgeCopilot.Core.csproj" />
     <Project Path="src/KnowledgeCopilot.Infrastructure/KnowledgeCopilot.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/src/database/">
-    <File Path="001_create_documents.sql" />
   </Folder>
 </Solution>
