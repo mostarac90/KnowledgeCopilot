@@ -17,6 +17,7 @@ builder.Services.AddSingleton<
     IDocumentTextExtractor,
     PdfTextExtractor>();
 
+builder.Services.AddScoped<DocumentRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
