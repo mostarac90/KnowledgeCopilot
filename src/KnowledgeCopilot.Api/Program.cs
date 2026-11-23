@@ -151,4 +151,14 @@ app.MapPatch("/api/documents",
     .DisableAntiforgery();
 
 
+app.MapGet("/api/documents",
+    async (DocumentRepository repository,
+           CancellationToken cancellationToken) =>
+    {
+        var documents = await repository.GetAllAsync(
+            cancellationToken);
+
+        return Results.Ok(documents);
+    });
+
 app.Run();
