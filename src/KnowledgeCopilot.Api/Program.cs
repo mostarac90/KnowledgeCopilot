@@ -78,7 +78,7 @@ app.MapGet("/api/health/database",
 
 // Document management endpoints
 
-app.MapPatch("/api/documents",
+app.MapPost("/api/documents",
      async (
         IFormFile file,
         IDocumentTextExtractor extractor,
@@ -161,7 +161,19 @@ app.MapGet("/api/documents",
         return Results.Ok(documents);
     });
 
+app.MapGet("/api/documents/{id:guid}",
+    async (Guid id,
+           DocumentRepository repository,
+           CancellationToken cancellationToken) =>
+    {
+        var document = await repository.GetByIdAsync(
+            id, cancellationToken);
 
+        if (document is null)
+            return Results.NotFound();
+
+        return Results.Ok(document);
+    });
 
 
 app.Run();
