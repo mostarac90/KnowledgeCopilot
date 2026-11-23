@@ -198,5 +198,40 @@ app.MapGet("/api/documents/{id:guid}",
         return Results.Ok(document);
     });
 
+app.MapGet("/api/search",
+    async (
+        ISemanticSearchService searchService,
+        string query,
+        int topK = 5,
+        CancellationToken cancellationToken = default) =>
+    {
+
+        if (string.IsNullOrWhiteSpace(query))
+            return Results.BadRequest("Query cannot be empty.");
+
+        // Check that query is max 2000 characters
+        if (query.Length > 2000)
+            return Results.BadRequest(
+                "Query cannot exceed 2000 characters.");
+
+        //Check that k is between 1 and 20
+        if (topK is < 1 or > 20)
+            return Results.BadRequest(
+                "topK must be between 1 and 20.");
+
+
+        var results = await searchService.SearchAsync(
+            query,
+            topK,
+            cancellationToken);
+
+        return Results.Ok(new
+        {
+            Query = query,
+            TotalResults = results.Count,
+            Results = results
+        });
+
+    });
 
 app.Run();
