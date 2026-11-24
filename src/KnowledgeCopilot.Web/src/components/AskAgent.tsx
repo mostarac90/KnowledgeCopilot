@@ -1,15 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { isAxiosError } from 'axios';
+import { getErrorMessage } from '../api/errors';
 import { useAskAgent } from '../hooks/useAskAgent';
 
 const MAX_QUESTION_LENGTH = 2000;
-
-const getErrorMessage = (error: Error): string => {
-  if (isAxiosError<{ error?: string }>(error) && error.response?.data?.error) {
-    return error.response.data.error;
-  }
-  return error.message;
-};
 
 export const AskAgent = () => {
   const [question, setQuestion] = useState('');
