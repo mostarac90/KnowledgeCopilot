@@ -8,6 +8,7 @@ builder.Services
     .AddDocumentServices()
     .AddEmbeddingServices()
     .AddRagServices()
+    .AddAgentServices()
     .AddSwaggerDocumentation();
 
 var app = builder.Build();
@@ -17,5 +18,6 @@ app.UseSwaggerDocumentation();
 app.MapHealthEndpoints();
 app.MapDocumentSearchEndpoints();
 app.MapAskEndpoints();
+app.MapAgentEndpoints();
 
 app.Run();
