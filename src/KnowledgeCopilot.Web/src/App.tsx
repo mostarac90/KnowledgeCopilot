@@ -1,13 +1,17 @@
 import './App.css'
-import { AskAgent } from './components/AskAgent'
+import { Route, Routes } from 'react-router'
+import { Layout } from './components/Layout'
+import { HomePage } from './pages/HomePage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 function App() {
-
   return (
-    <>
-     <h1>Hello, Knowledge Copilot!</h1>
-     <AskAgent />
-    </>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }
 
