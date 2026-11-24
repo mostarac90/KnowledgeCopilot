@@ -30,8 +30,19 @@ export const Layout = () => (
         </NavLink>
       </nav>
     </header>
-    <main>
+    <main className="flex-1">
       <Outlet />
     </main>
+    <footer className="mt-auto border-t border-(--border) px-4 py-4 text-center text-sm">
+      Built by{' '}
+      <a
+        href="https://www.linkedin.com/in/jasmin-krhan-031a84b1/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-(--accent) underline"
+      >
+        Jasmin Krhan
+      </a>
+    </footer>
   </>
 );

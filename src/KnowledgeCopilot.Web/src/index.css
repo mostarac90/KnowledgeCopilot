@@ -64,6 +64,8 @@
   box-sizing: border-box;
 }
 
+/* Element defaults live in the base layer so Tailwind utilities can override them. */
+@layer base {
 body {
   margin: 0;
 }
@@ -110,4 +112,5 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
 }
