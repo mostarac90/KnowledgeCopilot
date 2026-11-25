@@ -1,5 +1,6 @@
 using KnowledgeCopilot.Api.Endpoints;
 using KnowledgeCopilot.Api.Extensions;
+using KnowledgeCopilot.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Create/upgrade the database schema before handling any requests.
+await app.Services.GetRequiredService<DatabaseMigrator>().MigrateAsync();
 
 app.UseSwaggerDocumentation();
 

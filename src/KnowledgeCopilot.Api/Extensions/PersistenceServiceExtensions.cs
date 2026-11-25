@@ -1,3 +1,4 @@
+using KnowledgeCopilot.Infrastructure.Database;
 using Npgsql;
 using Pgvector.Npgsql;
 
@@ -20,6 +21,10 @@ public static class PersistenceServiceExtensions
         dataSourceBuilder.UseVector();
 
         services.AddSingleton(dataSourceBuilder.Build());
+
+        services.AddSingleton(sp => new DatabaseMigrator(
+            connectionString,
+            sp.GetRequiredService<ILogger<DatabaseMigrator>>()));
 
         return services;
     }
